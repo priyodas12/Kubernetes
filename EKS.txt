@@ -1,0 +1,41 @@
+
+1.create EKS master node,with 
+
+2.once master node is active access it from AWS CLI
+
+	aws eks --region <region-name> describe-cluster --name <cluster-name>  --query cluster.status
+
+	aws eks --region <region-name> update-kubeconfig --name <cluster-name> 
+
+3.create worker group,needs a additional role can be created by https://docs.aws.amazon.com/eks/latest/userguide/create-node-role.html
+
+4.kubectl get svc
+
+5.aws ecr get-login-password;aws will generate pass-key
+aws ecr get-login --registry-id <registry-id:neumeric data of ECR url at start>
+
+6.this secret will store ECR config details:
+
+kubectl create secret docker-registry <secret-name> --docker-server=<ECR-REPOSITORY_URL> --docker-username=AWS --docker-password=<pass-key> --docker-email=aws-root-user-email
+
+7.create application-name.yaml file locally;
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: private-reg
+spec:
+  containers:
+  - name: <container-name>
+    image: <ECR-REPOSITORY_URL:tag>
+  imagePullSecrets:
+  - name: <secret-name>
+  
+8.kubectl get secret;
+
+9.kubectl describe secret <secret-name>
+  
+10.kubectl apply -f application-name.yaml
+
+11.kubectl get pods;
+
