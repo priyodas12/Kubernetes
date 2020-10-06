@@ -1,8 +1,15 @@
+EKS Cluster Creation and Integrate with ECR:
 
 1.create EKS master node,with 
 
-2.once master node is active access it from AWS CLI
-
+2.once master node is active access it from AWS CLI(>2.54) and install kubectl to communcate with cluster from locally;
+	
+	aws --version 
+	install CLI:https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html
+	
+	install kubeclt:https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html
+	kubeclt
+	
 	aws eks --region <region-name> describe-cluster --name <cluster-name>  --query cluster.status
 
 	aws eks --region <region-name> update-kubeconfig --name <cluster-name> 
