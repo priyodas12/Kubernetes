@@ -1,48 +1,169 @@
-EKS Cluster Creation and Integrate with ECR:
+Create a Springboot Project:
+===========================
+1.customized from start.spring.io & expose a generic REST controller
+2.put a static index.html file in resources/static folder and add server.port=8080 in application.yaml
+3.mvn clean install
+4.mvn spring-boot:run
+5.test application goto>>localhost:8080
+5.mvn spring-boot:build-image(inbuild features in springboot >2.3V)
+6.docker image ls(to check the image created,docker desktop should run)
 
-1.create EKS master node,with 
+Push Image to ECR from Local machine:
+====================================
+1.connect ECR from EC2 cmd
 
-2.once master node is active access it from AWS CLI(>2.54) and install kubectl to communcate with cluster from locally;
-	
-	aws --version 
-	install CLI:https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html
-	
-	install kubeclt:https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html
-	kubeclt
-	
-	aws eks --region <region-name> describe-cluster --name <cluster-name>  --query cluster.status
+aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin 21XXXXXXXX12.dkr.ecr.ap-south-1.amazonaws.com/cicd-eks
 
-	aws eks --region <region-name> update-kubeconfig --name <cluster-name> 
+2.provide image tag
+docker tag springboot-docker-image:0.0.1-SNAPSHOT 21XXXXXXXX12.dkr.ecr.<region>.amazonaws.com/cicd-eks
 
-3.create worker group,needs a additional role can be created by https://docs.aws.amazon.com/eks/latest/userguide/create-node-role.html
+3.push docker-image
+
+docker push 21XXXXXXXX12.dkr.ecr.<region>.amazonaws.com/cicd-eks
+
+4.make a note of image
+
+21XXXXXXXX12.dkr.ecr.<region>.amazonaws.com/cicd-eks:latest
+
+Lunch an EC2 workstation(can be a local desktop) to execute kubectl cmd to communicate with API-SERVER of EKS:
+=============================================================================================================
+1.t2.micro or t3.micro with pre-intalled docker is prefered.
+
+2.attach admin access role or this EC2 machine
+
+3.connect this EC2 machine from console if SSH installed(like windows10) then run below
+ssh -i <private key file i.e. .pem file location while lunching the EC2> ec2-user@<public IP of EC2>
+
+
+Install AWS CLI:
+===============
+aws --version
+for linux EC2 machine will be provided latest version.
+
+or 
+
+follow:https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html
+
+Kubectl Install:
+=================
+
+sudo su
+cd
+curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.17.9/2020-08-04/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+cp kubectl $HOME/bin && export PATH=$HOME/bin:$PATH
+echo 'export PATH=$PATH:$HOME/bin' >> ~/.bashrc
+kubectl version --short --client
+
+IAM Role Creation for EKS Cluster:
+==================================
+with below policy
+1.AmazonEKSClusterPolicy
+2.AmazonEKSServicePolicy
+
+IAM Role Creation for EKS Worker Node:
+=====================================
+use below cloud formation temaplate from this page
+follow:https://docs.aws.amazon.com/eks/latest/userguide/create-node-role.html
+
+https://amazon-eks.s3.us-west-2.amazonaws.com/cloudformation/2020-08-12/amazon-eks-nodegroup-role.yaml
+
+Custom VPC creation:
+===================
+https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2019-02-11/amazon-eks-vpc-sample.yaml
+
+Once VPC Created make a note of VPC ID,SG Group,Subnet ID;
+
+SecurityGroups	sg-0xxxxxxxxxxxxxxx8
+SubnetIds	    subnet-0xxxxxxxxxxxxxd,subnet-0xxxxxxxxxxxxx5
+VpcId	        vpc-0xxxxxxxxxxxxxxa
+
+modify all subnet to provide/assign autometic IP for lunched instance.
+follow:https://docs.aws.amazon.com/vpc/latest/userguide/vpc-ip-addressing.html
+
+Create EKS Cluster:
+===================
+1.Change Value of region wanted to be created,role-arn,subnets and sg;
+
+aws eks create-cluster --name eks-cluster --region <region> --role-arn arn:aws:iam::21XXXXXXXX12:role/aws-eks-ecr --resources-vpc-config subnetIds=subnet-0xxxxxxxxxxxxxd,subnet-0xxxxxxxxxxxxx5,securityGroupIds=sg-0xxxxxxxxxxxxx8
+
+2.once cluster creation done:check cluster status;
+
+aws eks --region <region> describe-cluster --name eks-cluster  --query cluster.status
+
+3.once the status is active we can proceed with updating our kubeconfig file with the inforamtion on the new cluster so kubectl can communcate with it.
+
+aws eks --region <region> update-kubeconfig --name eks-cluster 
 
 4.kubectl get svc
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   xxx.xxx.xxx.1   <none>        443/TCP   4m31s
 
-5.aws ecr get-login-password;aws will generate pass-key
-aws ecr get-login --registry-id <registry-id:neumeric data of ECR url at start>
 
-6.this secret will store ECR config details:
+Create Worker Nodes:
+===================
 
-kubectl create secret docker-registry <secret-name> --docker-server=<ECR-REPOSITORY_URL> --docker-username=AWS --docker-password=<pass-key> --docker-email=aws-root-user-email
+https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2019-02-11/amazon-eks-nodegroup.yaml(this cloudformation is not working due to invalid AMI configuration, need R&D)
 
-7.create application-name.yaml file locally;
+or 
+
+1.goto cluster and create Worker node from console(use all default but select t3.micro instance type)
+2.select worker node IAM role which was created through cloudformation.
+
+Connect ECR to EKS Cluster:
+===========================
+
+kubectl create secret docker-registry kubesecret --docker-server=21XXXXXXXX12.dkr.ecr.<region>.amazonaws.com/cicd-eks --docker-username=AWS --docker-password=stdin --docker-email=abc@xyz.com(root account email)
+
+
+Integrate Secret file to lunch conatainer from Image:
+=====================================================
+
+create a app-config.yaml with vi editor;
 
 apiVersion: v1
 kind: Pod
 metadata:
-  name: private-reg
+  name: springboot-application
 spec:
   containers:
-  - name: <container-name>
-    image: <ECR-REPOSITORY_URL:tag>
+  - name: springboot-apps
+    image: 21XXXXXXXX12.dkr.ecr.<region>.amazonaws.com/cicd-eks 
   imagePullSecrets:
-  - name: <secret-name>
+  - name: kubesecret
   
-8.kubectl get secret;
+#apply this config
+kubectl apply -f app-config.yaml
 
-9.kubectl describe secret <secret-name>
-  
-10.kubectl apply -f application-name.yaml
+#see the nodes
+kubectl get nodes --watch
 
-11.kubectl get pods;
+Lunch Springboot Application:
+=============================
+1.lunch springboot application in container(each ec2 machine)
 
+kubectl run --image=21XXXXXXXX12.dkr.ecr.<region>.amazonaws.com/cicd-eks:latest springboot-app --port=8080
+
+2.get deployment status
+
+kubectl get deployment
+
+3.expose the application to internet in loadbalanced way
+
+kubectl expose deployment springboot-app --port=8080 --name=springboot-app-http --type LoadBalancer
+
+4.get service details
+
+kubectl get service springbboot-app-http
+
+5.pods info
+
+kubectl get pods
+
+6.service whole description
+
+kubectl describe services/springboot-app-http1
+ 
+7.goto Loadbalancer and get the Loadbalancer URL and lunch the application in port 8080
+Application Homepage:http://a3b9c399cc8f6462bb8855aa24b66f0d-242174993.ap-south-1.elb.amazonaws.com:8080/
+Application Info page:http://a3b9c399cc8f6462bb8855aa24b66f0d-242174993.ap-south-1.elb.amazonaws.com:8080/docker/image/
