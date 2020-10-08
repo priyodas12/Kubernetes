@@ -119,7 +119,7 @@ kubectl create secret docker-registry kubesecret --docker-server=21XXXXXXXX12.dk
 Integrate Secret file to lunch conatainer from Image:
 =====================================================
 
-create a app-config.yaml with vi editor;
+1.create a aws-config.yaml with vi editor;
 
 apiVersion: v1
 kind: Pod
@@ -131,9 +131,13 @@ spec:
     image: 21XXXXXXXX12.dkr.ecr.<region>.amazonaws.com/cicd-eks 
   imagePullSecrets:
   - name: kubesecret
-  
+   
 #apply this config
-kubectl apply -f app-config.yaml
+kubectl apply -f aws-config.yaml
+
+or create the same file with helm
+
+follow:https://artifacthub.io/packages/helm/architectminds/aws-ecr-credential
 
 #see the nodes
 kubectl get nodes --watch
