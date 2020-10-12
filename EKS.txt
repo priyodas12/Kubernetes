@@ -46,6 +46,7 @@ follow:https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html
 
 Kubectl Install:
 =================
+from root user:
 
 sudo su
 cd
@@ -54,6 +55,10 @@ chmod +x ./kubectl
 cp kubectl $HOME/bin && export PATH=$HOME/bin:$PATH
 echo 'export PATH=$PATH:$HOME/bin' >> ~/.bashrc
 kubectl version --short --client
+
+from EC2 user:
+
+follow:https://kubernetes.io/docs/tasks/tools/install-kubectl/
 
 IAM Role Creation for EKS Cluster:
 ==================================
