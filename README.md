@@ -1,2 +1,2 @@
 ## Kubernetes
-## EKS
+## EKS & ECR integration for CICD
