@@ -1,0 +1,8 @@
+Replication-Controller:
+
+Ensures that specific numbers of pods are running at any time,same as Auto scaling group in AWS.
+
+Advantages:
+
+1.High Availability.
+2.Load balancing.

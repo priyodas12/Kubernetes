@@ -1,0 +1,15 @@
+Kind                       ApiVersion
+-------------------------------------
+Pod------------------------->v1
+ReplicationController------->v1
+Service--------------------->v1
+ReplicaSet------------------>apps/v1
+Deployment------------------>apps/v1
+DeamonSet------------------->apps/v1
+Job------------------------->batch/v1
+
+v1------------->first stable release version;
+apps/v1-------->api group that maintains the application stability with deployments,rolling updates,sacling and replication.
+batch/v1------->maintains object related to bacth processing.
+
+alpha--->beta--->stable version.

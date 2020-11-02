@@ -1,0 +1,45 @@
+POD:
+
+1.to deploy simplngnix application at least we need one pod config file.
+
+# ngnix-pod.yaml
+================
+apiVersion: v1-->indicates 1st stable version.
+kind: POD
+meatadata: 
+	name: ngnix-pod
+	lebels:
+		app: ngnix
+		tier: dev
+		
+spec:
+	containers:
+		name: ngnix-container
+		image: ngnix or any ECR image url
+	imagePullSecrets:
+		name: kubesecret<authentication details will be saved over here>
+		
+2.if we want to pull image from ECR then secret file is needed create it before nginx-pod.yaml.
+kubectl create secret docker-registry kubesecret --docker-server=21XXXXXXXX12.dkr.ecr.<region>.amazonaws.com/<repo-name> --docker-username=AWS --docker-password=stdin --docker-email=abc@xyz.com(root account email)
+
+3.kubectl create -f ngnix-pod.yaml
+#pod/nignix-pod created.
+
+4.kubectl get pod
+#list all pods
+
+5.kubectl get pod o --wide
+#prints all pods all info
+
+6.kubectl describe pod nginx-pod
+#describes all stack,level,status,IP in yaml format.
+
+7.ping <pod_ip>
+#check connectivity between master to worker node
+
+8.kubectl exec -it ngnix-pod --/bin/bash
+#host-details
+
+9.kubectl delete pod ngnix-pod
+#deletes the pod
+
