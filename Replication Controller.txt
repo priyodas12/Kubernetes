@@ -6,3 +6,61 @@ Advantages:
 
 1.High Availability.
 2.Load balancing.
+
+#nginx-rc.yaml
+==============
+apiVersion: v1
+kind: ReplicationController
+metadata:
+	name: ngnix-rc
+spec:
+	replicas: 3
+	selector:
+		app: ngnix-app
+	template:
+		metadata:
+			name: ngnix-pod
+			lebels:
+				app: ngnix-app
+		spec:
+			containers:
+				name: ngnix-container
+				image: ngnix
+				ports:
+					containerPort: 80
+					
+				
+# create replication contoller and pods form it:
+kubectl create -f ngnix-rc.yaml
+
+#get all pod details:
+kubectl get pods
+
+#select all pods by name of application
+kubectl get pod -l app=ngnix-app
+
+#get pod creation logs:
+kubectl describe rc nginx-rc
+
+#get node details
+kubectl get pod -o wide
+
+#scale up by adding another two nodes:
+kubectl scale rc ngnix-rc --replicas=5
+
+#delete replication controller
+kubectl delete -f ngnix-rc.yaml
+
+
+
+
+
+
+
+
+
+
+
+
+
+
