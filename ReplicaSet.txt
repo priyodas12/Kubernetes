@@ -1,0 +1,13 @@
+Replica Set:
+===========
+1.Ensures that a specified number od pods are running at a time;
+
+	A.if there is exess pods ,they killed and vice versa
+	B.new pod are lunched when they fail ,get deleted or terminated.
+	
+	
+ReplicaSet and Pods are associated with "lebels"
+
+Difference between Replication Controller and ReplicaSet:
+	ReplicationCOntroller: EqualityBased
+	ReplicationSet: Set based
